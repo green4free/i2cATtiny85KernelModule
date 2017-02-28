@@ -1,0 +1,7 @@
+make[1]: Entering directory '/usr/src/linux-headers-4.4.48-v7+'
+  CHK     include/config/kernel.release
+  CHK     include/generated/uapi/linux/version.h
+  CHK     include/generated/utsrelease.h
+arch/arm/Makefile:315: recipe for target 'archprepare' failed
+make[1]: Leaving directory '/usr/src/linux-headers-4.4.48-v7+'
+Makefile:6: recipe for target 'all' failed
