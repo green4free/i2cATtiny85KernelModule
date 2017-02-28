@@ -15,7 +15,6 @@
 
      
     #define DEVICE_NAME "ATtiny85"
-    #define BUFFER_SIZE 1024
      
     MODULE_LICENSE("GPL");
     MODULE_AUTHOR("Magnus Östgren and Magnus Sörensen");
@@ -41,9 +40,6 @@
      
     static int device_major = 60;
     static int device_opend = 0;
-    static char device_buffer[BUFFER_SIZE];
-    static char *buff_rptr;
-    static char *buff_wptr;
      
     module_param(device_major, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     MODULE_PARM_DESC(device_major, DEVICE_NAME " major number");
@@ -68,7 +64,6 @@
     static int device_open(struct inode *nd, struct file *fp) {
         if(device_opend) return -EBUSY;
         device_opend++;
-        buff_rptr = buff_wptr = device_buffer;
         try_module_get(THIS_MODULE);
         return 0;
     }
@@ -80,20 +75,14 @@
     }
      
     static ssize_t device_read(struct file *fp, char *buff, size_t length, loff_t *offset) {
-        int bytes_read = strlen(buff_rptr);
-        if(bytes_read > length) bytes_read = length;
-        copy_to_user(buff, buff_rptr, bytes_read);
-        buff_rptr += bytes_read;
-        printk(KERN_INFO "ATtiny85: %d bytes read\n", bytes_read);
-        return bytes_read;
+        int clientData = i2c_smbus_read_byte_data(0x04, 0x04);
+        snprintf(buff, 4, "%d", clientData);
+        return clientData;
     }
      
     static ssize_t device_write(struct file *fp, const char *buff, size_t length, loff_t *offset) {
-        int bytes_written = BUFFER_SIZE - (buff_wptr - device_buffer);
-        if(bytes_written > length) bytes_written = length;
-        copy_from_user(buff_wptr, buff, bytes_written);
-        buff_wptr += bytes_written;
-        printk(KERN_INFO "ATtiny85: %d bytes written\n", bytes_written);
-        return bytes_written;
+        int clientData;
+        kstrtoint_from_user(buff, length, 10, &clientData);
+        return i2c_smbus_write_byte_data(0x04, 0x04, clientData);
     }
      
