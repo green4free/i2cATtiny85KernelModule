@@ -1,4 +1,4 @@
-obj-m := ATtiny85.o
+obj-m := ATtiny.o
 all:
 	make -C /lib/modules/$(shell uname -r)/build M=$(shell pwd) modules
 clean:

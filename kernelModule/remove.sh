@@ -1,4 +1,4 @@
 sudo make clean
-sudo rmmod ATtiny85
-sudo rm /dev/ATtiny85
+sudo rmmod ATtiny
+sudo rm /dev/ATtiny
 echo "Done!\n"
