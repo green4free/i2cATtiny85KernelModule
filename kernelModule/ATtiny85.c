@@ -14,8 +14,8 @@
 	#include <linux/i2c.h>
 
      
-    #define DEVICE_NAME "ATtiny85"
-     
+    #define DEVICE_NAME "ATtiny"
+  //  #define BUFFER_SIZE 32
     MODULE_LICENSE("GPL");
     MODULE_AUTHOR("Magnus Östgren and Magnus Sörensen");
     MODULE_DESCRIPTION("A simple character device driver to comunicate with an ATtiny micro controller");
@@ -25,14 +25,16 @@
     void device_exit(void);
     static int device_open(struct inode *, struct file *);
     static int device_release(struct inode *, struct file *);
-    static ssize_t device_read(struct file *, char *, size_t, loff_t *);
+    //static ssize_t device_read(struct file *, char *, size_t, loff_t *);
     static ssize_t device_write(struct file *, const char *, size_t, loff_t *);
      
     module_init(device_init);
     module_exit(device_exit);
-     
+    
+    //static struct i2c_device_id ATtiny_idtable = { "85", 0x04 };
+
     static struct file_operations fops = {
-        .read = device_read,
+  //      .read = device_read,
         .write = device_write,
         .open = device_open,
         .release = device_release
@@ -40,7 +42,8 @@
      
     static int device_major = 60;
     static int device_opend = 0;
-     
+   // static char device_buffer[BUFFER_SIZE];
+
     module_param(device_major, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     MODULE_PARM_DESC(device_major, DEVICE_NAME " major number");
      
@@ -48,17 +51,17 @@
         int ret;
         ret = register_chrdev(device_major, DEVICE_NAME, &fops);
         if(ret < 0) {
-            printk(KERN_ALERT "ATtiny85: cannot obtain major number %d.\n", device_major);
+            printk(KERN_ALERT "ATtiny: cannot obtain major number %d.\n", device_major);
             return ret;
         }
-        memset(device_buffer, 0, BUFFER_SIZE);
-        printk(KERN_INFO "ATtiny85: chrdev loaded.\n");
+     //   memset(device_buffer, 0, BUFFER_SIZE); 
+        printk(KERN_INFO "ATtiny: chrdev loaded.\n");
         return 0;
     }
      
     void device_exit() {
         unregister_chrdev(device_major, DEVICE_NAME);
-        printk(KERN_INFO "ATtiny85: chrdev unloaded.\n");
+        printk(KERN_INFO "ATtiny: chrdev unloaded.\n");
     }
      
     static int device_open(struct inode *nd, struct file *fp) {
@@ -73,16 +76,18 @@
         module_put(THIS_MODULE);
         return 0;
     }
-     
+     /*
     static ssize_t device_read(struct file *fp, char *buff, size_t length, loff_t *offset) {
-        int clientData = i2c_smbus_read_byte_data(0x04, 0x04);
-        snprintf(buff, 4, "%d", clientData);
-        return clientData;
+        //int clientData = i2c_smbus_read_byte_data(&ATtiny_idtable, 0x04);
+        snprintf(buff, 4, "%d", 255);
+        return 0;
     }
-     
+     */
     static ssize_t device_write(struct file *fp, const char *buff, size_t length, loff_t *offset) {
         int clientData;
+       // copy_from_user(device_buffer, buff, length);
         kstrtoint_from_user(buff, length, 10, &clientData);
-        return i2c_smbus_write_byte_data(0x04, 0x04, clientData);
+        printk(KERN_INFO "ATtiny: got %d that squared is %d\n", clientData, clientData * clientData);
+        //i2c_smbus_write_byte_data(&ATtiny_idtable, 0x04, clientData);
+        return length;
     }
-     
