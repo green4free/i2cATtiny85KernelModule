@@ -11,8 +11,8 @@
     #include <linux/errno.h>
     #include <asm/uaccess.h>
 	
-	#include <linux/i2c.h>
-
+    #include <linux/i2c-dev.h>
+  
      
     #define DEVICE_NAME "ATtiny"
  
@@ -31,7 +31,7 @@
     module_init(device_init);
     module_exit(device_exit);
     
-    //static struct i2c_device_id ATtiny_idtable = { "85", 0x04 };
+  
 
     static struct file_operations fops = {
         .read = device_read,
@@ -63,10 +63,20 @@
         unregister_chrdev(device_major, DEVICE_NAME);
         printk(KERN_INFO "ATtiny: chrdev unloaded.\n");
     }
-     
+    int file;
+    int adapter_nr = 1; /* probably dynamically determined */
+    char filename[20];
+    int addr = 0x04; /* The I2C address */
+
     static int device_open(struct inode *nd, struct file *fp) {
         if(device_opend) return -EBUSY;
         device_opend++;
+        snprintf(filename, 19, "/dev/i2c-%d", adapter_nr);
+        file = open(filename, O_RDWR);
+        if (ioctl(file, I2C_SLAVE, addr) < 0) {
+            /* ERROR HANDLING; you can check errno to see what went wrong */
+  
+        }
         try_module_get(THIS_MODULE);
         return 0;
     }
@@ -77,25 +87,36 @@
         return 0;
     }
   size_t dataLength;
+  int clientData;
     static ssize_t device_read(struct file *fp, char *buff, size_t length, loff_t *offset) {
-        //int clientData = i2c_smbus_read_byte_data(&ATtiny_idtable, 0x04);
+
         char dataBuffer[length];
         memset(dataBuffer, 0, length);
-        snprintf(dataBuffer, length, "%d\n", 255);
+        clientData = 0;
+        if (read(file, &clientData, 1) != 1) {
+            /* ERROR HANDLING: i2c transaction failed */
+            return -1;
+        }
+        else {
+        snprintf(dataBuffer, length, "%d\n", clientData);
         printk(KERN_INFO "ATtiny:%s", dataBuffer); 
         for(dataLength = 0; dataBuffer[dataLength] != 0; dataLength++);
         copy_to_user(buff, dataBuffer, dataLength);
         return dataLength;
+        }
     }
  
     static ssize_t device_write(struct file *fp, const char *buff, size_t length, loff_t *offset) {
-        int clientData;
-       // copy_from_user(device_buffer, buff, length);
+        clientData = 0;
+
         if(0 == kstrtoint_from_user(buff, length, 10, &clientData)){
             printk(KERN_INFO "ATtiny:got %d that squared is %d\n", clientData, clientData * clientData);
+            if(write(file, &clientData, 1) != 1){
+                /* ERROR transaction failed */
+            }
         }else{
             printk(KERN_INFO "ATtiny:Error, non integer input");
         }
-        //i2c_smbus_write_byte_data(&ATtiny_idtable, 0x04, clientData);
+
         return length;
     }
