@@ -1,4 +1,4 @@
 sudo make clean
-sudo rmmod ATtiny
-sudo rm /dev/ATtiny
+sudo rmmod characterDevice
+sudo rm /dev/characterDevice
 echo "Done!\n"
