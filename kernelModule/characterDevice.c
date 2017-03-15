@@ -17,7 +17,7 @@
  
     MODULE_LICENSE("GPL");
     MODULE_AUTHOR("Magnus Östgren and Magnus Sörensen");
-    MODULE_DESCRIPTION("A simple character device driver to comunicate with an characterDevice micro controller");
+    MODULE_DESCRIPTION("A simple character device driver that takes integer input and returns integer output, it is a test in writing kernel modules.");
     MODULE_SUPPORTED_DEVICE(DEVICE_NAME);
      
     int device_init(void);
