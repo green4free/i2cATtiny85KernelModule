@@ -11,7 +11,6 @@
     #include <linux/errno.h>
     #include <asm/uaccess.h>
 	
-    #include <linux/i2c-dev.h>
   
      
     #define DEVICE_NAME "characterDevice"
@@ -47,6 +46,7 @@
     module_param(device_major, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     MODULE_PARM_DESC(device_major, DEVICE_NAME " major number");
      
+
     int device_init() {
         int ret;
         ret = register_chrdev(device_major, DEVICE_NAME, &fops);
@@ -63,10 +63,7 @@
         unregister_chrdev(device_major, DEVICE_NAME);
         printk(KERN_INFO "characterDevice: chrdev unloaded.\n");
     }
-    int file;
-    int adapter_nr = 1; /* probably dynamically determined */
-    char filename[20];
-    int addr = 0x04; /* The I2C address */
+    
 
     static int device_open(struct inode *nd, struct file *fp) {
         if(device_opend) return -EBUSY;
